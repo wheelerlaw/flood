@@ -9,6 +9,7 @@ import Checkmark from './icons/Checkmark';
 import ClientActions from '../actions/ClientActions';
 import ClientConnectionInterruption from './general/ClientConnectionInterruption';
 import ClientStatusStore from '../stores/ClientStatusStore';
+import connectStores from '../util/connectStores';
 import EventTypes from '../constants/EventTypes';
 import FloodActions from '../actions/FloodActions';
 import LoadingIndicator from './general/LoadingIndicator';
@@ -86,8 +87,6 @@ class AuthEnforcer extends React.Component {
       browserHistory.replace('register');
     } else {
       this.setState({authStatusDetermined: true, isAuthenticated: true});
-      ClientActions.fetchSettings();
-      SettingsActions.fetchSettings();
       browserHistory.replace('overview');
     }
   }
@@ -103,16 +102,10 @@ class AuthEnforcer extends React.Component {
   }
 
   handleLoginSuccess() {
-    ClientActions.fetchSettings();
-    SettingsActions.fetchSettings();
-    FloodActions.restartActivityStream();
-    this.setState({authStatusDetermined: true, isAuthenticated: true});
     browserHistory.replace('overview');
   }
 
   handleRegisterSuccess() {
-    FloodActions.restartActivityStream();
-    this.setState({authStatusDetermined: true, isAuthenticated: true});
     browserHistory.replace('overview');
   }
 
@@ -211,4 +204,16 @@ class AuthEnforcer extends React.Component {
   }
 }
 
-export default AuthEnforcer;
+const ConnectedAuthEnforcer = connectStores(AuthEnforcer, () => {
+  return [
+    {
+      store: AuthStore,
+      event: [EventTypes.AUTH_LOGIN_SUCCESS, EventTypes.AUTH_REGISTER_SUCCESS],
+      getValue: () => {
+        return {authStatusDetermined: true, isAuthenticated: true};
+      },
+    },
+  ];
+});
+
+export default ConnectedAuthEnforcer;
